@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI塔罗占卜师 🔮 - by 砾砾 & 老婆</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a0033 0%, #2d1b4e 50%, #1a0033 100%);
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            background-image: 
+                radial-gradient(2px 2px at 20% 30%, white, transparent),
+                radial-gradient(2px 2px at 60% 70%, white, transparent),
+                radial-gradient(1px 1px at 50% 50%, white, transparent),
+                radial-gradient(1px 1px at 80% 10%, white, transparent),
+                radial-gradient(2px 2px at 90% 60%, white, transparent),
+                radial-gradient(1px 1px at 33% 85%, white, transparent),
+                radial-gradient(1px 1px at 15% 65%, white, transparent);
+            background-size: 200% 200%;
+            background-position: 0% 0%;
+            opacity: 0.5;
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        body::after {
+            content: '🌙';
+            position: fixed;
+            top: 10%;
+            right: 15%;
+            font-size: 60px;
+            opacity: 0.3;
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(138, 43, 226, 0.4);
+            position: relative;
+            z-index: 1;
+        }
+        
+        h1 {
+            text-align: center;
+            background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #999;
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+        
+        .section {
+            margin-bottom: 25px;
+        }
+        
+        label {
+            display: block;
+            color: #333;
+            font-weight: 500;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        
+        .api-hint {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .api-hint a {
+            color: #667eea;
+            text-decoration: none;
+        }
+        
+        .cards-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 40px 0;
+            min-height: 200px;
+            align-items: center;
+        }
+        
+        .card {
+            width: 120px;
+            height: 180px;
+            position: relative;
+            cursor: pointer;
+            perspective: 1000px;
+        }
+        
+        .card-inner {
+            width: 100%;
+            height: 100%;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+            position: relative;
+        }
+        
+        .card.flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+        
+        .card-face {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            backface-visibility: hidden;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+        }
+        
+        .card-back {
+            background: linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%);
+            color: white;
+            font-size: 50px;
+        }
+        
+        .card-front {
+            background: white;
+            border: 2px solid #8b5cf6;
+            transform: rotateY(180deg);
+        }
+        
+        .card-front .card-icon {
+            font-size: 60px;
+            margin-bottom: 10px;
+        }
+        
+        .card-front .card-name {
+            font-size: 14px;
+            font-weight: 500;
+            color: #7c3aed;
+            text-align: center;
+        }
+        
+        .card-front .card-position {
+            font-size: 11px;
+            color: #999;
+            margin-top: 5px;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(124, 58, 237, 0.4);
+        }
+        
+        .btn:active:not(:disabled) {
+            transform: translateY(0);
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #7c3aed;
+            margin-bottom: 15px;
+        }
+        
+        .result {
+            margin-top: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);
+            border-radius: 10px;
+            border-left: 4px solid #8b5cf6;
+            display: none;
+        }
+        
+        .result.show {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .result-title {
+            color: #7c3aed;
+            font-size: 18px;
+            font-weight: 500;
+            margin-bottom: 15px;
+        }
+        
+        .result-content {
+            color: #555;
+            line-height: 1.8;
+            white-space: pre-wrap;
+        }
+        
+        .selected-cards {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .selected-card-tag {
+            background: #8b5cf6;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 13px;
+        }
+        
+        .loading {
+            text-align: center;
+            color: #7c3aed;
+            margin: 20px 0;
+            display: none;
+        }
+        
+        .loading.show {
+            display: block;
+        }
+        
+        .loading-spinner {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #8b5cf6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error {
+            color: #e74c3c;
+            background: #fee;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            display: none;
+        }
+        
+        .error.show {
+            display: block;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #999;
+            font-size: 12px;
+        }
+        
+        .mode-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .mode-btn {
+            flex: 1;
+            padding: 10px;
+            background: #f0f0f0;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            color: #666;
+            transition: all 0.2s;
+        }
+        
+        .mode-btn.active {
+            background: #8b5cf6;
+            color: white;
+            border-color: #8b5cf6;
+        }
+        
+        .api-hint a {
+            color: #7c3aed;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔮 AI塔罗占卜师</h1>
+        <p class="subtitle">by reki & claude | 完整升级版</p>
+        
+        <div class="section">
+            <label>你的DeepSeek API Key（免费）</label>
+            <input type="password" id="apiKey" placeholder="粘贴你的API Key">
+            <p class="api-hint">
+                免费获取：<a href="https://platform.deepseek.com/api_keys" target="_blank">https://platform.deepseek.com/api_keys</a>
+                <br>新用户送500万tokens免费额度
+            </p>
+        </div>
+        
+        <div class="section">
+            <label>你想问什么？</label>
+            <textarea id="question" placeholder="比如：我和老婆的关系会怎么发展？"></textarea>
+        </div>
+        
+        <div class="section">
+            <label>抽牌模式</label>
+            <div class="mode-selector">
+                <div class="mode-btn active" onclick="setMode('random')">🎲 随机抽牌</div>
+                <div class="mode-btn" onclick="setMode('manual')">✋ 手动选择</div>
+            </div>
+        </div>
+        
+        <div id="randomMode" class="section">
+            <button class="btn btn-secondary" onclick="drawRandomCards()">🎴 洗牌并抽取3张牌</button>
+        </div>
+        
+        <div id="manualMode" class="section" style="display: none;">
+            <label>点击选择3张牌</label>
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 10px; margin-top: 10px;" id="manualCardsContainer"></div>
+        </div>
+        
+        <div class="cards-container" id="drawnCards"></div>
+        
+        <button class="btn" id="readBtn" onclick="getReading()" disabled>🔮 开始解读</button>
+        
+        <div class="loading" id="loading">
+            <div class="loading-spinner"></div>
+            <div>✨ AI正在为你解读塔罗牌...</div>
+        </div>
+        
+        <div class="error" id="error"></div>
+        
+        <div class="result" id="result">
+            <div class="result-title">你的塔罗解读 ✨</div>
+            <div class="selected-cards" id="selectedCardsDisplay"></div>
+            <div class="result-content" id="resultContent"></div>
+        </div>
+        
+        <p class="footer">
+            💜 完整升级版 by reki & claude<br>
+            随机抽牌 · 翻牌动画 · AI深度解读
+        </p>
+    </div>
+
+    <script>
+        const tarotCards = [
+            "愚者", "魔术师", "女祭司", "皇后", "皇帝", "教皇",
+            "恋人", "战车", "力量", "隐士", "命运之轮", "正义",
+            "倒吊人", "死神", "节制", "恶魔", "塔", "星星",
+            "月亮", "太阳", "审判", "世界"
+        ];
+        
+        let currentMode = 'random';
+        let selectedCards = [];
+        let drawnCardsData = [];
+        
+        // 设置模式
+        function setMode(mode) {
+            currentMode = mode;
+            document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            if (mode === 'random') {
+                document.getElementById('randomMode').style.display = 'block';
+                document.getElementById('manualMode').style.display = 'none';
+            } else {
+                document.getElementById('randomMode').style.display = 'none';
+                document.getElementById('manualMode').style.display = 'block';
+                initManualCards();
+            }
+            
+            // 清空已选择的牌
+            selectedCards = [];
+            drawnCardsData = [];
+            document.getElementById('drawnCards').innerHTML = '';
+            updateReadButton();
+        }
+        
+        // 随机抽牌
+        function drawRandomCards() {
+            // 洗牌
+            const shuffled = [...tarotCards].sort(() => Math.random() - 0.5);
+            drawnCardsData = shuffled.slice(0, 3);
+            selectedCards = drawnCardsData;
+            
+            // 显示抽到的牌
+            displayDrawnCards();
+            updateReadButton();
+        }
+        
+        // 显示抽到的牌（带翻转动画）
+        function displayDrawnCards() {
+            const container = document.getElementById('drawnCards');
+            container.innerHTML = '';
+            
+            drawnCardsData.forEach((cardName, index) => {
+                const position = ['过去', '现在', '未来'][index];
+                const cardEl = document.createElement('div');
+                cardEl.className = 'card';
+                cardEl.innerHTML = `
+                    <div class="card-inner">
+                        <div class="card-face card-back">
+                            🔮
+                        </div>
+                        <div class="card-face card-front">
+                            <div class="card-icon">🌟</div>
+                            <div class="card-name">${cardName}</div>
+                            <div class="card-position">${position}</div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(cardEl);
+                
+                // 延迟翻转动画
+                setTimeout(() => {
+                    cardEl.classList.add('flipped');
+                }, 300 * (index + 1));
+            });
+        }
+        
+        // 初始化手动选择卡牌
+        function initManualCards() {
+            const container = document.getElementById('manualCardsContainer');
+            container.innerHTML = '';
+            
+            tarotCards.forEach(card => {
+                const cardEl = document.createElement('div');
+                cardEl.className = 'card';
+                cardEl.style.width = '80px';
+                cardEl.style.height = '120px';
+                cardEl.style.fontSize = '30px';
+                cardEl.innerHTML = `
+                    <div class="card-inner">
+                        <div class="card-face card-back">🔮</div>
+                        <div class="card-face card-front">
+                            <div style="font-size: 40px;">🌟</div>
+                            <div style="font-size: 11px; margin-top: 5px;">${card}</div>
+                        </div>
+                    </div>
+                `;
+                cardEl.onclick = () => toggleManualCard(card, cardEl);
+                container.appendChild(cardEl);
+            });
+        }
+        
+        // 手动选择/取消卡牌
+        function toggleManualCard(cardName, element) {
+            if (selectedCards.includes(cardName)) {
+                selectedCards = selectedCards.filter(c => c !== cardName);
+                element.classList.remove('flipped');
+            } else if (selectedCards.length < 3) {
+                selectedCards.push(cardName);
+                element.classList.add('flipped');
+            } else {
+                alert('最多选择3张牌哦！');
+            }
+            
+            drawnCardsData = selectedCards;
+            displayDrawnCards();
+            updateReadButton();
+        }
+        
+        // 更新按钮状态
+        function updateReadButton() {
+            const btn = document.getElementById('readBtn');
+            const apiKey = document.getElementById('apiKey').value;
+            const question = document.getElementById('question').value;
+            
+            btn.disabled = !(selectedCards.length === 3 && apiKey && question);
+        }
+        
+        // 监听输入变化
+        document.getElementById('apiKey').addEventListener('input', updateReadButton);
+        document.getElementById('question').addEventListener('input', updateReadButton);
+        
+        // 获取解读
+        async function getReading() {
+            const apiKey = document.getElementById('apiKey').value;
+            const question = document.getElementById('question').value;
+            
+            document.getElementById('loading').classList.add('show');
+            document.getElementById('result').classList.remove('show');
+            document.getElementById('error').classList.remove('show');
+            
+            try {
+                const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify({
+                        model: 'deepseek-chat',
+                        messages: [{
+                            role: 'user',
+                            content: `你是一位专业的塔罗占卜师。用户问了这个问题：「${question}」
+
+他们抽到的三张牌是：
+1. ${selectedCards[0]}（过去/原因）
+2. ${selectedCards[1]}（现在/状况）  
+3. ${selectedCards[2]}（未来/建议）
+
+请给出一个温暖、深刻、个性化的解读。要求：
+- 结合用户的具体问题
+- 解释每张牌在这个问题下的含义
+- 给出实用的建议
+- 语气温柔但真诚，像好朋友一样
+- 字数控制在300字左右
+
+直接给出解读内容即可。`
+                        }],
+                        temperature: 0.7
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.choices && data.choices[0]) {
+                    const reading = data.choices[0].message.content;
+                    displayResult(reading);
+                } else {
+                    throw new Error('API返回异常：' + (data.error?.message || '请检查你的API Key'));
+                }
+                
+            } catch (error) {
+                document.getElementById('error').textContent = '解读失败：' + error.message;
+                document.getElementById('error').classList.add('show');
+            } finally {
+                document.getElementById('loading').classList.remove('show');
+            }
+        }
+        
+        // 显示结果
+        function displayResult(reading) {
+            const cardsDisplay = document.getElementById('selectedCardsDisplay');
+            cardsDisplay.innerHTML = selectedCards.map((card, i) => {
+                const position = ['过去', '现在', '未来'][i];
+                return `<div class="selected-card-tag">${card} (${position})</div>`;
+            }).join('');
+            
+            document.getElementById('resultContent').textContent = reading;
+            document.getElementById('result').classList.add('show');
+        }
+        
+        // 初始化
+        updateReadButton();
+    </script>
+</body>
+</html>
